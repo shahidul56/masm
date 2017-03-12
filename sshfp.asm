@@ -123,14 +123,14 @@ new_line endp
 ;------------------------------------------------------------------------------
 ; EXIT_ERR source
 ; Prints error message and general arguments requirements and closes.
+; Expects offset address in SI.
 ;------------------------------------------------------------------------------
-exit_err macro source
-    mov     si, offset source
+exit_err proc
     call    print_str
     mov     si, offset err_general_info
     call    print_str
     call    close
-endm
+exit_err endp
 
 ;------------------------------------------------------------------------------
 ; FLUSH_ARGS
@@ -247,10 +247,12 @@ read_args proc
     ret
 
     catch_err_too_long:
-    exit_err err_too_long
+    mov     si, offset err_too_long
+    call    exit_err 
 
     catch_err_too_many_args:
-    exit_err err_too_many_args
+    mov     si, offset err_too_many_args
+    call    exit_err
 read_args endp
 
 ;------------------------------------------------------------------------------
@@ -324,16 +326,20 @@ parse_args proc
     ret
 
     catch_err_not_enough_args:
-    exit_err err_not_enough_args
+    mov     si, offset err_not_enough_args
+    call    exit_err
 
     catch_error_wrong_args_lengths:
-    exit_err err_wrong_args_lengths
+    mov     si, offset err_wrong_args_lengths
+    call    exit_err
 
     catch_err_wrong_version:
-    exit_err err_wrong_version
+    mov     si, offset err_wrong_version
+    call    exit_err
 
     catch_err_incorrect_hex:
-    exit_err err_incorrect_hex
+    mov     si, offset err_incorrect_hex
+    call    exit_err
 parse_args endp
 
 ;------------------------------------------------------------------------------
