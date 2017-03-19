@@ -29,10 +29,10 @@ data segment
     ; symbols from `symbols` array.
     chessboard              db 153 dup (0)
     end_position            db 0
-    symbols                 db ' .o+=*BOX@%&#/^'
     border_top              db '+--[ RSA 1024]----+$'
     border_bottom           db '+-----------------+$'
     border_side             db '|'
+    symbols                 db ' .o+=*BOX@%&#/^'
 
     err_general_info        db 'Provide version number (0 or 1) and 32 hexadecimal digits [0-9a-f].$'
     err_wrong_version       db 'Wrong version number.',CR,LF,'$'
@@ -60,8 +60,10 @@ code segment
 ;------------------------------------------------------------------------------
 modulo proc
     push    bx
+    push    cx
     mov     bl, cl
     div     bl
+    pop     cx
     pop     bx
     ret
 modulo endp
@@ -265,7 +267,6 @@ parse_args proc
     push    cx ; Loop counter.
     push    di ; Pointer in array.
 
-
     ; Check if user provided *exactly* two arguments.
     xor     ax, ax
     mov     al, ds:[args_count]
@@ -451,7 +452,7 @@ move_right endp
 ;------------------------------------------------------------------------------
 move_bottom proc
     ; Bishop is in the last row so it can't move to the bottom.
-    cmp     bx, 136
+    cmp     bx, 135
     jg      escape_move_bottom
     add     bx, 17
     escape_move_bottom:
@@ -593,7 +594,7 @@ convert_visits_to_ascii proc
     ; Loop over cells of array.
     inc     di
     cmp     di, 153
-    jle     print_cell
+    jl      print_cell
 
     mov     ds:[chessboard+76], 'S'
     mov     si, bx
