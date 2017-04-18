@@ -34,24 +34,24 @@ BUFFER_SIZE     equ 16383
 
 data segment
     yay                     db '!!!$'
-    
+
     ; Current offset in buffer (for processing).
     ; Starts at buffer size to call initial reload.
     pointer                 dw BUFFER_SIZE
     ; Buffer for storing files content while processing.
     buffer                  db BUFFER_SIZE dup (0)
-    
+
     ; File handlers:
     input                   dw 0
     output                  dw 0
-    
+
     ; All non-whitespace characters from args that are stored in memory.
     args                    db MAX_ARGS_SIZE dup (0)
     ; Array containing lengths of args.
     args_lengths            db MAX_ARGS_COUNT dup (0)
     ; Total count of used arguments.
     args_count              db 0
-    
+
     ; Print stats:
     whitespace_num          dw 0
     punctuations_num        dw 0
@@ -60,7 +60,7 @@ data segment
     words_num               dw 0
     sentences_num           dw 0
     lines_num               dw 0
-    
+
     ; Text messages:
     info                    db 'Given file contains: '
     info_whitespace         db CR,LF,'Whitespace: '
@@ -71,7 +71,7 @@ data segment
     info_sentences          db CR,LF,'Sentences: '
     info_lines              db CR,LF,'Lines: '
     new_line                db CR,LF
-    
+
     ; Lengths of strings (for file writing):
     info_length             db 21
     info_whitespace_length  db 14
@@ -81,9 +81,9 @@ data segment
     info_words_length       db 9
     info_sentences_length   db 13
     info_lines_length       db 9
-    
+
     file_is_correct         db 'Correct!$'
-    
+
     ; Errors:
     err_general_info        db 'Program expects two formats of input:',CR,LF,'"-v input" - check for letters, numbers, whitespace and punctuation marks.',CR,LF,'"input output" - analyses input file and outputs statistics to output file.$'
     err_file_open           db 'Could not open specified file.',CR,LF,'$'
@@ -99,7 +99,7 @@ data segment
     err_out_of_disk_space   db 'Out of disk space. Cannot write output file.$'
     err_too_many_args       db 'Too many arguments provided.',CR,LF,'$'
     err_wrong_args          db 'Incorrect arguments.',CR,LF,'$'
-    
+
     ; Used by `print_num` procedure.
     num_buffer    	db 6 dup ('$')
     num_buffer_size         db 0
@@ -152,7 +152,7 @@ num_to_str proc
 	push	cx ; Loop counter.
 	push	dx ; Result of division.
     push    si ; Text pointer.
-    
+
 	mov 	bx, 10
 	mov 	cx, 0
 
@@ -163,7 +163,7 @@ num_to_str proc
 	inc		cx
 	cmp 	ax, 0
 	jne 	to_stack
-    
+
     mov     ds:[num_buffer_size], cl
 	mov 	si, offset num_buffer
 
@@ -190,19 +190,19 @@ print_num proc
 	push 	ax ; Source.
 	push	bx ; Used in division.
 	push	cx ; Loop counter.
-    
+
     ; Clear buffer before printing.
     mov     cx, 5
     clear_buffer:
     mov     bx, cx
     mov     ds:[num_buffer+bx], '$'
     loop    clear_buffer
-    
+
     call    num_to_str
 
     mov     si, offset num_buffer
     call    print_str
-    
+
 	pop		cx
 	pop		bx
 	pop		ax
@@ -229,16 +229,16 @@ exit_err endp
 file_create proc
     push    cx ; File attributes.
     push    dx ; Gives int 21h function filename.
-    
+
     xor     cx, cx ; Normal file creation, no attributes.
     mov     ah, CREATE_FILE
     mov     dx, si
     int     DOS
     jnc     return_file_create
-    
+
     ; Error.
     mov     ax, 0
-    
+
     return_file_create:
     pop     dx
     pop     cx
@@ -254,16 +254,16 @@ file_create endp
 file_open proc
     push    cx ; File attributes.
     push    dx ; Gives int 21h function filename.
-    
+
     mov     al, 0
     mov     ah, OPEN_FILE
     mov     dx, si
     int     DOS
     jnc     return
-    
+
     ; Error.
     mov     ax, 0
-    
+
     return:
     pop     dx
     pop     cx
@@ -280,16 +280,16 @@ file_close proc
     ; No file handler - nothing to close.
     cmp     ax, 0
     je      return_file_close
-    
+
     mov     bx, ax
     mov     ah, CLOSE_FILE
     int     DOS
     jc      catch_err_file_close
-    
+
     return_file_close:
     pop     ax
     ret
-    
+
     catch_err_file_close:
     mov     si, offset err_file_close
     call    print_str
@@ -306,7 +306,7 @@ file_write proc
     push    bx
     push    cx
     push    dx
-    
+
     mov     cx, ax
     mov     ah, WRITE_FILE
     mov     bx, ds:[output]
@@ -314,24 +314,24 @@ file_write proc
     je      return_file_write
     mov     dx, si
     int     DOS
-    
+
     jc      catch_err_file_write
-    
+
     cmp     ax, cx
     jne     catch_err_out_of_disk_space
-    
+
     return_file_write:
     pop     dx
     pop     cx
     pop     bx
     pop     ax
     ret
-    
+
     catch_err_file_write:
     mov     si, offset err_file_write
     call    print_str
     call    close
-    
+
     catch_err_out_of_disk_space:
     mov     si, offset err_out_of_disk_space
     call    print_str
@@ -346,12 +346,12 @@ file_write endp
 flush_arg proc
     push    ax
     push    bx
-    
+
     ; Add separator.
     mov     ax, ARG_SEPARATOR
     mov     ds:[di], ax
     inc     di
-    
+
     xor     ax, ax
     xor     bx, bx
 
@@ -453,8 +453,8 @@ read_args proc
 
     call    flush_arg
     inc     bx ; Increase total amount of characters by separator.
-    
-    end_of_args:    
+
+    end_of_args:
     pop     di
     pop     si
     pop     cx
@@ -482,41 +482,41 @@ parse_args proc
     push    bx
     push    cx ; Loop counter.
     push    di ; Pointer in array.
-    
+
     ; Check if user provided *exactly* two arguments.
     xor     ax, ax
     mov     al, ds:[args_count]
     cmp     ax, 2
     jl      catch_err_wrong_args
-    
+
     ; Check if first argument is a file that can be opened.
     mov     si, offset args
     call    file_open
     cmp     ax, 0
     je      check_another_first_arg
-    
+
     ; file_open returned file handler so it should be stored in ds:[input].
     mov     ds:[input], ax
-    
+
     ; First argument was a file so second one is a name for an output file.
     mov     si, offset args
     mov     bl, ds:[args_lengths]
     add     si, bx
     inc     si ; Separator.
-    
+
     call    file_create
     cmp     ax, 0
     je      catch_err_file_create
     mov     ds:[output], ax
-    
+
     jmp     return_parse_args
-    
+
     ; Check if length of first argument is exactly 2 ('-v').
     check_another_first_arg:
     mov     al, ds:[args_lengths]
     cmp     ax, 2
     jne     catch_err_wrong_args
-    
+
     ; Compare first and second character to '-v'.
     mov     al, ds:[args]
     cmp     al, '-'
@@ -524,34 +524,34 @@ parse_args proc
     mov     al, ds:[args+1]
     cmp     al, 'v'
     jne     catch_err_wrong_args
-    
+
     ; First argument was '-v' so second one is file to check.
     mov     si, offset args
     mov     bl, ds:[args_lengths]
     add     si, bx
     inc     si
-    
+
     call    file_open
     cmp     ax, 0
     je      catch_err_file_open
-    
+
     mov     ds:[input], ax
-    
+
     return_parse_args:
     pop     di
     pop     cx
     pop     bx
     pop     ax
     ret
-    
+
     catch_err_wrong_args:
     mov     si, offset err_wrong_args
     call    exit_err
-    
+
     catch_err_file_create:
     mov     si, offset err_file_create
     call    exit_err
-    
+
     catch_err_file_open:
     mov     si, offset err_file_open
     call    exit_err
@@ -566,7 +566,7 @@ reload_buffer proc
     push    bx
     push    cx
     push    dx
-    
+
     ; Read content of the file.
     mov     ax, ds:[input]
     mov     bx, ax
@@ -575,24 +575,24 @@ reload_buffer proc
     mov     ah, READ_FILE
     int     DOS
     jc      catch_err_file_read
-    
+
     ; Reset current pointer.
     mov     ds:[pointer], 0
-    
+
     ; If AX is different from CX it means end of file occured.
     cmp     ax, cx
     je      return_reload_buffer
-    
+
     ; Separate those last bytes of the file from previous buffer content.
     mov     bx, ax
     mov     ds:[buffer+bx], 0
-        
+
     return_reload_buffer:
     pop     dx
     pop     cx
     pop     bx
     ret
-    
+
     catch_err_file_read:
     mov     si, offset err_file_read
     call    print_str
@@ -611,19 +611,19 @@ get_char proc
     mov     ax, ds:[pointer]
     cmp     ax, BUFFER_SIZE
     jl      read_char_from_memory
-    
+
     call    reload_buffer
-    
+
     ; If file ended return 0.
     cmp     ax, 0
     je      return_get_char
-    
+
     read_char_from_memory:
     mov     bx, ds:[pointer]
     inc     ds:[pointer]
-    
+
     mov     al, ds:[buffer+bx]
-    
+
     return_get_char:
     pop     bx
     ret
@@ -638,15 +638,15 @@ verify_file_content proc
     push    ax ; Processing of all characters.
     push    bx ; Current line.
     push    cx ; Current character in line.
-    
+
     mov     bx, 1
     mov     cx, 1
-    
+
     process_file:
     call    get_char
     cmp     ax, 0
     je      return_verify_file_content
-    
+
     ; Legal characters are:
     ; 0-32 whitespace
     ; 33 !
@@ -661,7 +661,7 @@ verify_file_content proc
     jne     compare
     inc     bx
     mov     cx, 0 ; Start from 0 not 1 because LF also increases the counter.
-    
+
     compare:
     cmp     al, ' '
     jle     ok
@@ -692,20 +692,20 @@ verify_file_content proc
     cmp     al, 'z'
     jle     ok
     jmp     catch_err_wrong_file
-    
+
     ok:
     inc     cx
     jmp     process_file
-    
+
     return_verify_file_content:
     mov     si, offset file_is_correct
     call    print_str
-    
+
     pop     cx
     pop     bx
     pop     ax
     ret
-    
+
     catch_err_wrong_file:
     mov     si, offset err_wrong_file_1
     call    print_str
@@ -717,7 +717,7 @@ verify_file_content proc
     call    print_num
     mov     si, offset err_wrong_file_3
     call    print_str
-    
+
     call    close
 verify_file_content endp
 
@@ -730,14 +730,14 @@ is_whitespace proc
     cmp     al, ' '
     jle     whitespace
     jmp     not_whitespace
-    
+
     whitespace:
     mov     ah, 1
     jmp     return_is_whitespace
-    
+
     not_whitespace:
     mov     ah, 0
-    
+
     return_is_whitespace:
     ret
 is_whitespace endp
@@ -769,11 +769,11 @@ is_punctuation proc
     jl      not_punctuation
     je      punctuation
     jmp     not_punctuation
-    
+
     punctuation:
     mov     ah, 1
     jmp     return_is_punctuation
-    
+
     not_punctuation:
     mov     ah, 0
 
@@ -792,14 +792,14 @@ is_digit proc
     cmp     al, '9'
     jle     digit
     jmp     not_digit
-    
+
     digit:
     mov     ah, 1
     jmp     return_is_digit
-    
+
     not_digit:
     mov     ah, 0
-    
+
     return_is_digit:
     ret
 is_digit endp
@@ -819,14 +819,14 @@ is_letter proc
     cmp     al, 'z'
     jle     letter
     jmp     not_letter
-    
+
     letter:
     mov     ah, 1
     jmp     return_is_letter
-    
+
     not_letter:
     mov     ah, 0
-    
+
     return_is_letter:
     ret
 is_letter endp
@@ -839,23 +839,23 @@ is_letter endp
 print_stats proc
     push    ax ; Current character.
     push    bx ; 1 if previous character was a letter, 0 otherwise.
-    
+
     ; Start with letter because it can stick to the first word and it won't
     ; mess up calculations.
     mov     bx, 1
-    
+
     calculate_stats:
     call    get_char
-    
+
     cmp     ax, 0
     je      return_print_stats
-    
+
     cmp     al, LF
     jne     check_whitespace
     inc     ds:[lines_num]
     mov     bx, 0
     jmp     continue_not_letter
-    
+
     check_whitespace:
     call    is_whitespace
     cmp     ah, 0
@@ -865,7 +865,7 @@ print_stats proc
     je      continue_not_letter
     inc     ds:[words_num]
     jmp     continue_not_letter
-    
+
     check_punctuation:
     call    is_punctuation
     cmp     ah, 0
@@ -873,7 +873,7 @@ print_stats proc
     inc     ds:[punctuations_num]
     cmp     bx, 0
     je      continue_not_letter
-    
+
     ; There must be more specific check for punctuation marks ending sentences.
     cmp     al, '!'
     je      mark_next_sentence
@@ -883,152 +883,152 @@ print_stats proc
     je      mark_next_sentence
     cmp     al, ','
     je      mark_comma
-    
+
     jmp     continue_not_letter
-    
+
     mark_next_sentence:
     inc     ds:[words_num]
     inc     ds:[sentences_num]
     jmp     continue_not_letter
-    
+
     mark_comma:
     inc     ds:[words_num]
     jmp     continue_not_letter
-    
+
     check_digit:
     call    is_digit
     cmp     ah, 0
     je      check_letter
     inc     ds:[digits_num]
     jmp     continue_not_letter
-    
+
     check_letter:
     mov     bx, 0
     call    is_letter
     cmp     ah, 0
     je      catch_err_unrecognized_char
     inc     ds:[letters_num]
-    
+
     continue_letter:
     mov     bx, 1
     jmp     continue
-    
+
     continue_not_letter:
     mov     bx, 0
 
     continue:
     jmp     calculate_stats
-    
+
     return_print_stats:
     mov     si, offset file_is_correct
     call    print_str
-    
+
     mov     si, offset info
     xor     ah, ah
     mov     al, ds:[info_length]
     call    file_write
-    
+
     ; Same for whitespace...
     mov     si, offset info_whitespace
     xor     ah, ah
     mov     al, ds:[info_whitespace_length]
     call    file_write
-    
+
     mov     ax, ds:[whitespace_num]
     call    num_to_str
     mov     si, offset num_buffer
     xor     ah, ah
     mov     al, ds:[num_buffer_size]
     call    file_write
-    
+
     ; ... punctuation...
     mov     si, offset info_punctuation
     xor     ah, ah
     mov     al, ds:[info_punctuation_length]
     call    file_write
-    
+
     mov     ax, ds:[punctuations_num]
     call    num_to_str
     mov     si, offset num_buffer
     xor     ah, ah
     mov     al, ds:[num_buffer_size]
     call    file_write
-    
+
     ; ... digits...
     mov     si, offset info_digits
     xor     ah, ah
     mov     al, ds:[info_digits_length]
     call    file_write
-    
+
     mov     ax, ds:[digits_num]
     call    num_to_str
     mov     si, offset num_buffer
     xor     ah, ah
     mov     al, ds:[num_buffer_size]
     call    file_write
-    
+
     ; ... letters...
     mov     si, offset info_letters
     xor     ah, ah
     mov     al, ds:[info_letters_length]
     call    file_write
-    
+
     mov     ax, ds:[letters_num]
     call    num_to_str
     mov     si, offset num_buffer
     xor     ah, ah
     mov     al, ds:[num_buffer_size]
     call    file_write
-    
+
     ; ... words...
     mov     si, offset info_words
     xor     ah, ah
     mov     al, ds:[info_words_length]
     call    file_write
-    
+
     mov     ax, ds:[words_num]
     call    num_to_str
     mov     si, offset num_buffer
     xor     ah, ah
     mov     al, ds:[num_buffer_size]
     call    file_write
-    
+
     ; ... sentences...
     mov     si, offset info_sentences
     xor     ah, ah
     mov     al, ds:[info_sentences_length]
     call    file_write
-    
+
     mov     ax, ds:[sentences_num]
     call    num_to_str
     mov     si, offset num_buffer
     xor     ah, ah
     mov     al, ds:[num_buffer_size]
     call    file_write
-    
+
     ; ... lines...
     mov     si, offset info_lines
     xor     ah, ah
     mov     al, ds:[info_lines_length]
     call    file_write
-    
+
     mov     ax, ds:[lines_num]
     call    num_to_str
     mov     si, offset num_buffer
     xor     ah, ah
     mov     al, ds:[num_buffer_size]
     call    file_write
-    
+
     ; And final new line:
     mov     si, offset new_line
     xor     ah, ah
     mov     al, 2
     call    file_write
-    
+
     pop     bx
     pop     ax
     ret
-    
+
     catch_err_unrecognized_char:
     ;;;
     call    print_num
@@ -1037,7 +1037,7 @@ print_stats proc
     call    print_char
     pop     ax
     ;;;
-    
+
     mov     si, offset err_unrecognized_char
     call    print_str
 print_stats endp
@@ -1058,20 +1058,20 @@ start:
     mov     sp, offset peak
     mov     ax, seg peak
     mov     ss, ax
-    
+
     call    read_args
     call    parse_args
-    
+
     ; If there is no output file program can assume the first version (if there
     ; was an error it would be thrown during parsing.
     cmp     ds:[output], 0
     jne     second_version
     call    verify_file_content
     jmp     cleanup
-    
+
     second_version:
     call    print_stats
-    
+
     cleanup:
     ; There is no need to check if there is file handler for given file because
     ; `file_close` takes care of that.
@@ -1079,7 +1079,7 @@ start:
     call    file_close
     mov     ax, ds:[output]
     call    file_close
-    
+
     call    close
 code ends
 
