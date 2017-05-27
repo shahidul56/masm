@@ -35,13 +35,13 @@ data segment
     len                     db 0
     
     ; Both inclusive.
-    x_max_pos               equ 27fh
-    y_max_pos               equ 1dfh ;640x480
-    
-    x_pos                   dw ?
-    y_pos                   dw 1dfh
-    deg_delta               dw 60d
-    deg_radian              dw 180d
+	x_max_pos	    		equ 27fh
+	y_max_pos   			equ 1dfh ;640x480
+	
+    x_pos	    			dw ?
+	y_pos   				dw 1dfh
+	deg_delta				dw 60d
+	deg_radian				dw 180d
     
     ; Errors:
     err_general_info        db 'Program expects two arguments: number of iterations and triangle edge in pixels (0-255).$'
@@ -52,7 +52,7 @@ data segment
     err_invalid_char        db 'Only numbers allowed.',CR,LF,'$'
     
     ; Used by `print_num` procedure.
-    num_buffer      db 6 dup ('$')
+    num_buffer    	db 6 dup ('$')
     num_buffer_size         db 0
 data ends
 
@@ -360,7 +360,7 @@ parse_args endp
 ; Recursively generate strings in L-system.
 ; Changes A to B-A-B.
 ; AX stores number of iterations left.
-;------------------------------------------------------------------------------     
+;------------------------------------------------------------------------------ 	
 l_system_a proc
     push    ax
     cmp     ax, 0
@@ -385,24 +385,24 @@ l_system_a proc
     pop     ax
     ret
 l_system_a endp
-    
+	
 ;------------------------------------------------------------------------------
 ; L_SYSTEM_B
 ; Recursively generate strings in L-system.
 ; Changes B to A+B+A.
 ; AX stores number of iterations left.
-;------------------------------------------------------------------------------     
+;------------------------------------------------------------------------------ 	
 l_system_b proc
     push    ax
     cmp     ax, 0
     je      draw_b
     
     dec     ax
-    call    l_system_a  ; A
-    call    add_angle   ; +
-    call    l_system_b  ; B
-    call    add_angle   ; +
-    call    l_system_a  ; A
+    call    l_system_a	; A
+    call    add_angle	; +
+    call    l_system_b	; B
+    call    add_angle	; +
+    call    l_system_a	; A
     jmp     ret_l_system_b
     
     draw_b:
@@ -426,9 +426,9 @@ init_fpu proc
     fild    ds:[deg_radian]
     fild    ds:[deg_delta]
     fdiv    st(0), st(1) ; st(0) <= 60/180
-    fldpi                ; st(0) <= π, st(1) <= 1/3
+    fldpi	             ; st(0) <= π, st(1) <= 1/3
     fmul    st(0), st(1) ; st(0) <= 1/3 * π
-    fldz                 ; st(0) <= 0 st(1) <= 1/3 * π
+    fldz				 ; st(0) <= 0 st(1) <= 1/3 * π
     fldz                 ; st(0) <= 0 st(1) <= 0 st(2) <= 1/3 * π
     fldz                 ; st(0) <= 0 st(1) <= 0 st(2) <= 0 st(3) <= 1/3 * π
     ; st(0) <= x_pos
@@ -455,7 +455,7 @@ graphics_init endp
 ;------------------------------------------------------------------------------
 ; TEXT_MODE
 ; Exit graphics mode and go back to text mode 80x25.
-;------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------	
 text_mode proc
     push    ax
     mov     ah, 0
@@ -466,22 +466,22 @@ text_mode proc
     pop     ax 
     ret
 text_mode endp
-    
+	
 ;------------------------------------------------------------------------------
 ; ADD_ANGLE
 ; Add 1/3π.
-;------------------------------------------------------------------------------     
+;------------------------------------------------------------------------------		
 add_angle proc
     fxch    st(2)        ; st(0) <=> st(2)
     fadd    st(0), st(3) ; st(0) <= angle + 1/3 * π
     fxch    st(2)        ; st(0) <=> st(2)
     ret
 add_angle endp
-    
+	
 ;------------------------------------------------------------------------------
 ; SUB_ANGLE
 ; Substract 1/3 π.
-;------------------------------------------------------------------------------     
+;------------------------------------------------------------------------------  	
 sub_angle proc
     fxch    st(2)
     fsub    st(0), st(3)
@@ -492,7 +492,7 @@ sub_angle endp
 ;------------------------------------------------------------------------------
 ; SINCOS
 ; Calculate sin and cos and leave them on the stack.
-;------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------	
 sincos proc
     fld     st(2) ; st(0) <= st(2) (angle)
     fsincos       ; st(0) <= cos(a) st(1) <= sin(a)
@@ -508,7 +508,7 @@ sincos endp
 ;------------------------------------------------------------------------------
 ; REVERSE_SINCOS
 ; Reverse effect of SINCOS procedure.
-;------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------	
 reverse_sincos proc
     ; Starts with:
     ; st(0) <= x st(1) <= y st(2) <= cos(a)
@@ -525,7 +525,7 @@ reverse_sincos endp
 ; DRAW_PIXEL
 ; Does necessary calculations and draws pixel to the screen if its position is
 ; within borders.
-;------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------	
 draw_pixel proc
     push    ax
     push    cx
@@ -538,9 +538,9 @@ draw_pixel proc
     fist    word ptr x_pos         ; x_pos <= int(st(0))
     fxch    st(1)                  ; x + cos(a) <=> y
     fadd    st(0), st(3)           ; st(0) <= y + sin(a)
-    fld     st(0)                  ; st(0) <= st(0) (copy())
-    fabs                           ; st(0) <= abs(st(0))
-    fistp   word ptr y_pos         ; y_pos <= int(st(0)); pop()
+    fld     st(0)				   ; st(0) <= st(0) (copy())
+    fabs						   ; st(0) <= abs(st(0))
+    fistp   word ptr y_pos		   ; y_pos <= int(st(0)); pop()
     fxch    st(1)                  ; y + sin(a) <=> x + cos(a)
     mov     cx, word ptr x_pos
     mov     ax, word ptr y_max_pos
@@ -558,17 +558,17 @@ draw_pixel proc
     jg      ret_draw_pixel
     
     ; If passed, draw pixel.
-    mov     ah, 0ch ; Write pixel.
-    mov     al, 02h ; Color.
+    mov     ah, 0ch	; Write pixel.
+    mov     al, 02h	; Color.
     int     10h
     
     ret_draw_pixel:
     pop     dx
     pop     cx
     pop     ax
-    ret 
+    ret	
 draw_pixel endp
-    
+	
 ;------------------------------------------------------------------------------
 ; DRAW_EDGE
 ; Draw one edge of triangle.
