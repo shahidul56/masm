@@ -842,6 +842,8 @@ print_stats proc
     ; mess up calculations.
     mov     bx, 1
     
+    mov     ds:[lines_num], 1 ; Start counting lines with 1 (there always will be).
+    
     calculate_stats:
     call    get_char
     
@@ -1028,14 +1030,6 @@ print_stats proc
     ret
     
     catch_err_unrecognized_char:
-    ;;;
-    call    print_num
-    push    ax
-    mov     ax, ' '
-    call    print_char
-    pop     ax
-    ;;;
-    
     mov     si, offset err_unrecognized_char
     call    print_str
 print_stats endp
