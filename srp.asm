@@ -440,7 +440,7 @@ init_fpu endp
 
 ;------------------------------------------------------------------------------
 ; GRAPHICS_INIT
-; Inicjalizacja grafiki 640x480 B/W graphics (MCGA,VGA)
+; Initialize 640x480 B/W graphics (MCGA,VGA)
 ;------------------------------------------------------------------------------
 graphics_init proc
     push    ax
@@ -653,7 +653,7 @@ start:
 code ends
 
 stack segment stack
-    dw      2000h dup (0)
+    dw      100h dup (?)
     peak    dw ?
 stack ends
 

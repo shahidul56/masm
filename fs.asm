@@ -253,7 +253,7 @@ file_open proc
     push    cx ; File attributes.
     push    dx ; Gives int 21h function filename.
     
-    mov     al, 0
+    mov     al, 0 ; Read-only mode.
     mov     ah, OPEN_FILE
     mov     dx, si
     int     DOS
@@ -1030,6 +1030,14 @@ print_stats proc
     ret
     
     catch_err_unrecognized_char:
+    ;;;
+    call    print_num
+    push    ax
+    mov     ax, ' '
+    call    print_char
+    pop     ax
+    ;;;
+    
     mov     si, offset err_unrecognized_char
     call    print_str
 print_stats endp
