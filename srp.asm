@@ -44,13 +44,14 @@ data segment
 	deg_radian				dw 180d
     
     ; Errors:
-    err_general_info        db 'Program expects two arguments: number of iterations and triangle edge in pixels (0-255).$'
+    err_general_info        db 'Program expects two arguments: number of iterations (0-10) and triangle edge in pixels (1-255).$'
     err_too_big_num         db 'Provided number was too big to be stored in memory.',CR,LF,'$'
     err_too_long            db 'Total length of provided arguments was too long (buffer overflow).',CR,LF,'$'
     err_too_many_args       db 'Too many arguments provided.',CR,LF,'$'
     err_wrong_args          db 'Incorrect arguments.',CR,LF,'$'
     err_invalid_char        db 'Only numbers allowed.',CR,LF,'$'
-    
+    err_inc_arg				db 'Incorrect argument values.',CR,LF,'$'
+	
     ; Used by `print_num` procedure.
     num_buffer    	db 6 dup ('$')
     num_buffer_size         db 0
@@ -614,9 +615,9 @@ draw_sierpinski proc
     call    draw_edge
     
     ret_draw_sierpinski:
-    call text_mode
+    call 	text_mode
     
-    pop ax
+    pop 	ax
     ret
 draw_sierpinski endp
 
@@ -642,14 +643,22 @@ start:
     
     mov     ax, 0
     call    arg_to_num
-    mov     ds:[iternum], al
+	cmp		al, 10
+	jg		catch_err_inc_arg
+	mov     ds:[iternum], al
     
     mov     ax, 1
     call    arg_to_num
+	cmp		al, 0
+	je		catch_err_inc_arg
     mov     ds:[len], al
     
     call    draw_sierpinski
     call    close
+	
+	catch_err_inc_arg:
+    mov     si, offset err_inc_arg
+    call    exit_err
 code ends
 
 stack segment stack
